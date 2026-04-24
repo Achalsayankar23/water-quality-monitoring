@@ -1,41 +1,119 @@
-import axios from 'axios'; // Import Axios for making HTTP requests
+import axios from 'axios';
 import React, { useState } from 'react';
 
 const styles = {
+  page: {
+    minHeight: '100vh',
+    padding: '40px 20px',
+    background: `
+      linear-gradient(135deg, rgba(0,0,0,0.75), rgba(0,40,80,0.75)),
+      url("https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80")
+    `,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundAttachment: 'fixed',
+    fontFamily: 'Segoe UI, sans-serif',
+  },
+
   container: {
-    maxWidth: '500px',
-    margin: '50px auto 0',
-    padding: '20px',
-    backgroundColor: '#f0f0f0',
-    borderRadius: '8px',
-    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+    maxWidth: '550px',
+    margin: '0 auto',
+    padding: '35px',
+    borderRadius: '20px',
+    background: 'rgba(255,255,255,0.08)',
+    border: '1px solid rgba(255,255,255,0.15)',
+    backdropFilter: 'blur(14px)',
+    boxShadow: '0 0 25px rgba(0,255,255,0.15)',
+    color: '#fff',
   },
-  formGroup: {
+
+  title: {
+    textAlign: 'center',
+    fontSize: '34px',
+    fontWeight: 'bold',
     marginBottom: '25px',
+    color: '#00eaff',
+    textShadow: '0 0 10px #00eaff',
   },
+
+  formGroup: {
+    marginBottom: '18px',
+  },
+
   label: {
     display: 'block',
-    marginBottom: '5px',
-    fontSize: '16px',
+    marginBottom: '8px',
     fontWeight: 'bold',
+    color: '#dffcff',
   },
+
   input: {
     width: '100%',
-    padding: '10px',
-    fontSize: '16px',
-    borderRadius: '4px',
-    border: '1px solid #ccc',
+    padding: '12px',
+    fontSize: '15px',
+    borderRadius: '12px',
+    border: '1px solid rgba(255,255,255,0.2)',
+    background: 'rgba(255,255,255,0.08)',
+    color: '#fff',
+    outline: 'none',
     boxSizing: 'border-box',
+    backdropFilter: 'blur(10px)',
   },
+
+  select: {
+    width: '100%',
+    padding: '12px',
+    fontSize: '15px',
+    borderRadius: '12px',
+    border: '1px solid rgba(255,255,255,0.2)',
+    background: 'rgba(255,255,255,0.08)',
+    color: '#fff',
+    outline: 'none',
+    boxSizing: 'border-box',
+    cursor: 'pointer',
+    backdropFilter: 'blur(10px)',
+    appearance: 'none',
+    WebkitAppearance: 'none',
+    MozAppearance: 'none',
+    backgroundImage:
+      'url("data:image/svg+xml;utf8,<svg fill=\'white\' height=\'24\' viewBox=\'0 0 24 24\' width=\'24\' xmlns=\'http://www.w3.org/2000/svg\'><path d=\'M7 10l5 5 5-5z\'/></svg>")',
+    backgroundRepeat: 'no-repeat',
+    backgroundPosition: 'right 12px center',
+    backgroundSize: '18px',
+  },
+
+  option: {
+    backgroundColor: '#06263d',
+    color: '#fff',
+  },
+
   button: {
     width: '100%',
-    padding: '10px',
+    padding: '14px',
     fontSize: '16px',
-    borderRadius: '4px',
+    fontWeight: 'bold',
+    borderRadius: '12px',
     border: 'none',
-    backgroundColor: '#007bff',
+    background: 'linear-gradient(90deg,#00eaff,#007bff)',
     color: '#fff',
     cursor: 'pointer',
+    marginTop: '10px',
+    transition: '0.3s',
+    boxShadow: '0 0 15px rgba(0,255,255,0.35)',
+  },
+
+  success: {
+    color: '#00ff99',
+    textAlign: 'center',
+    marginBottom: '15px',
+    fontWeight: 'bold',
+  },
+
+  error: {
+    color: '#ff7070',
+    textAlign: 'center',
+    marginBottom: '15px',
+    fontWeight: 'bold',
   },
 };
 
@@ -49,36 +127,40 @@ function Complaint() {
     emailAddress: '',
   });
 
-  const [formError, setFormError] = useState('');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [name]: value,
+      [e.target.name]: e.target.value,
     });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setFormError('');
-    
-    // Basic form validation
-    if (!formData.name || !formData.address || !formData.zone || !formData.complaintType) {
-      setFormError('Please fill out all fields.');
+
+    setError('');
+    setSuccess('');
+
+    if (
+      !formData.name ||
+      !formData.address ||
+      !formData.zone ||
+      !formData.complaintType
+    ) {
+      setError('Please fill all required fields.');
       return;
     }
-    
+
     try {
-      // Log the form data to ensure it's correctly populated
-      console.log('Submitting form data:', formData);
-    
-      // Make POST request to backend
-      const response = await axios.post('http://localhost:8081/api/complaints/add', formData);
-    
-      console.log('Response:', response.data);
-    
-      // Reset form after successful submission
+      await axios.post(
+        'http://localhost:8081/api/complaints/add',
+        formData
+      );
+
+      setSuccess('Complaint submitted successfully!');
+
       setFormData({
         name: '',
         address: '',
@@ -87,93 +169,110 @@ function Complaint() {
         phoneNumber: '',
         emailAddress: '',
       });
-      setFormError('Complaint submitted successfully!');
-    } catch (error) {
-      console.error('Error submitting complaint:', error.message);
-      setFormError('Error submitting complaint. Please try again.');
+    } catch (err) {
+      setError('Error submitting complaint.');
     }
-  };  
+  };
 
   return (
-    <div style={styles.container}>
-      <h1>Submit a Complaint</h1>
-      <form onSubmit={handleSubmit}>
-        <div style={styles.formGroup}>
-          <label style={styles.label}>Full Name</label>
-          <input
-            type="text"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            style={styles.input}
-            required
-          />
-        </div>
-        <div style={styles.formGroup}>
-          <label style={styles.label}>Address</label>
-          <input
-            type="text"
-            name="address"
-            value={formData.address}
-            onChange={handleChange}
-            style={styles.input}
-            required
-          />
-        </div>
-        <div style={styles.formGroup}>
-          <label style={styles.label}>Zone</label>
-          <select
-            name="zone"
-            value={formData.zone}
-            onChange={handleChange}
-            style={styles.input}
-            required
+    <div style={styles.page}>
+      <div style={styles.container}>
+        <h1 style={styles.title}>Submit Complaint</h1>
+
+        {error && <div style={styles.error}>{error}</div>}
+        {success && <div style={styles.success}>{success}</div>}
+
+        <form onSubmit={handleSubmit}>
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Full Name</label>
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              style={styles.input}
+            />
+          </div>
+
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Address</label>
+            <input
+              type="text"
+              name="address"
+              value={formData.address}
+              onChange={handleChange}
+              style={styles.input}
+            />
+          </div>
+
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Zone</label>
+            <select
+              name="zone"
+              value={formData.zone}
+              onChange={handleChange}
+              style={styles.select}
+            >
+              <option value="" style={styles.option}>Select Zone</option>
+              <option value="North" style={styles.option}>North</option>
+              <option value="South" style={styles.option}>South</option>
+              <option value="East" style={styles.option}>East</option>
+              <option value="West" style={styles.option}>West</option>
+            </select>
+          </div>
+
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Complaint Type</label>
+            <select
+              name="complaintType"
+              value={formData.complaintType}
+              onChange={handleChange}
+              style={styles.select}
+            >
+              <option value="" style={styles.option}>Select Complaint Type</option>
+              <option value="Water Leakage" style={styles.option}>Water Leakage</option>
+              <option value="Water Contamination" style={styles.option}>Water Contamination</option>
+              <option value="Low Water Pressure" style={styles.option}>Low Water Pressure</option>
+              <option value="No Water Supply" style={styles.option}>No Water Supply</option>
+            </select>
+          </div>
+
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Phone Number</label>
+            <input
+              type="text"
+              name="phoneNumber"
+              value={formData.phoneNumber}
+              onChange={handleChange}
+              style={styles.input}
+            />
+          </div>
+
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Email Address</label>
+            <input
+              type="email"
+              name="emailAddress"
+              value={formData.emailAddress}
+              onChange={handleChange}
+              style={styles.input}
+            />
+          </div>
+
+          <button
+            type="submit"
+            style={styles.button}
+            onMouseEnter={(e) =>
+              (e.target.style.transform = 'scale(1.03)')
+            }
+            onMouseLeave={(e) =>
+              (e.target.style.transform = 'scale(1)')
+            }
           >
-            <option value="">Select Zone</option>
-            <option value="North">North</option>
-            <option value="South">South</option>
-          </select>
-        </div>
-        <div style={styles.formGroup}>
-          <label style={styles.label}>Complaint Type</label>
-          <select
-            name="complaintType"
-            value={formData.complaintType}
-            onChange={handleChange}
-            style={styles.input}
-            required
-          >
-            <option value="">Select Complaint Type</option>
-            <option value="Water Leakage">Water Leakage</option>
-            <option value="Water Contamination">Water Contamination</option>
-            <option value="Low Water Pressure">Low Water Pressure</option>
-          </select>
-        </div>
-        <div style={styles.formGroup}>
-          <label style={styles.label}>Phone Number</label>
-          <input
-            type="text"
-            name="phoneNumber"
-            value={formData.phoneNumber}
-            onChange={handleChange}
-            style={styles.input}
-            required
-          />
-        </div>
-        <div style={styles.formGroup}>
-          <label style={styles.label}>Email Address</label>
-          <input
-            type="email"
-            name="emailAddress"
-            value={formData.emailAddress}
-            onChange={handleChange}
-            style={styles.input}
-            required
-          />
-        </div>
-        {formError && <p style={{ color: 'red' }}>{formError}</p>}
-        <button type="submit" style={styles.button}>Submit Complaint</button>
-      </form>
+            Submit Complaint
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

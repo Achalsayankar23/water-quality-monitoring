@@ -1,203 +1,307 @@
-import axios from 'axios'; // Import Axios for making HTTP requests
-import { ArcElement, Chart, Legend, Tooltip } from 'chart.js';
-import React, { useEffect, useState } from 'react';
-import { Pie } from 'react-chartjs-2'; // Import Pie chart component
+import axios from "axios";
+import { ArcElement, Chart, Legend, Tooltip } from "chart.js";
+import React, { useEffect, useState } from "react";
+import { Pie } from "react-chartjs-2";
 
 Chart.register(ArcElement, Tooltip, Legend);
 
 const styles = {
-    mainContainer: {
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
-    },
-    container: {
-        width: '65%', // Increased width of the complaints container
-        margin: '20px',
-        padding: '20px',
-        backgroundColor: '#f0f0f0',
-        borderRadius: '8px',
-        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-    },
-    chartContainer: {
-        width: '30%', // Adjusted width for better alignment
-        height: '350px', // Increased height to fit the chart
-        margin: '20px',
-        backgroundColor: '#fff',
-        borderRadius: '15px',
-        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: '30px', // Added padding for better spacing
-        boxSizing: 'border-box',
-    },
-    complaintItem: {
-        marginBottom: '20px',
-        padding: '10px',
-        border: '1px solid #ccc',
-        borderRadius: '4px',
-    },
-    buttonContainer: {
-        marginTop: '10px',
-        display: 'flex',
-        justifyContent: 'center',
-    },
-    button: {
-        margin: '0 10px',
-        padding: '10px 20px',
-        fontSize: '16px',
-        cursor: 'pointer',
-        border: 'none',
-        borderRadius: '4px',
-    },
-    acceptButton: {
-        backgroundColor: 'green',
-        color: '#fff',
-    },
-    rejectButton: {
-        backgroundColor: 'red',
-        color: '#fff',
-    },
-    acknowledgement: {
-        marginTop: '10px',
-        textAlign: 'center',
-    },
-    complaintType: {
-        fontWeight: 'bold',
-        marginBottom: '10px',
-    },
+  page: {
+    minHeight: "100vh",
+    padding: "30px",
+    background:
+      "linear-gradient(135deg, #03111f, #06283d, #0a4f6b, #03111f)",
+    backgroundSize: "400% 400%",
+    animation: "gradientMove 12s ease infinite",
+    color: "#fff",
+  },
+
+  title: {
+    textAlign: "center",
+    fontSize: "38px",
+    fontWeight: "bold",
+    marginBottom: "25px",
+    color: "#6ee7ff",
+    textShadow: "0 0 15px rgba(110,231,255,0.8)",
+  },
+
+  layout: {
+    display: "grid",
+    gridTemplateColumns: "2fr 1fr",
+    gap: "25px",
+  },
+
+  leftPanel: {
+    background: "rgba(255,255,255,0.08)",
+    border: "1px solid rgba(255,255,255,0.15)",
+    borderRadius: "20px",
+    padding: "25px",
+    backdropFilter: "blur(18px)",
+    boxShadow: "0 0 25px rgba(0,255,255,0.12)",
+  },
+
+  rightPanel: {
+    background: "rgba(255,255,255,0.08)",
+    border: "1px solid rgba(255,255,255,0.15)",
+    borderRadius: "20px",
+    padding: "25px",
+    backdropFilter: "blur(18px)",
+    boxShadow: "0 0 25px rgba(0,255,255,0.12)",
+    height: "fit-content",
+  },
+
+  card: {
+    background: "rgba(255,255,255,0.06)",
+    border: "1px solid rgba(255,255,255,0.12)",
+    borderRadius: "18px",
+    padding: "20px",
+    marginBottom: "18px",
+    transition: "0.3s",
+  },
+
+  complaintType: {
+    fontSize: "22px",
+    fontWeight: "bold",
+    color: "#6ee7ff",
+    marginBottom: "10px",
+  },
+
+  text: {
+    margin: "6px 0",
+    color: "#e8faff",
+  },
+
+  status: {
+    marginTop: "12px",
+    fontWeight: "bold",
+    fontSize: "16px",
+  },
+
+  buttonRow: {
+    display: "flex",
+    gap: "12px",
+    marginTop: "15px",
+  },
+
+  btn: {
+    flex: 1,
+    padding: "12px",
+    border: "none",
+    borderRadius: "10px",
+    fontWeight: "bold",
+    cursor: "pointer",
+    fontSize: "15px",
+    transition: "0.3s",
+  },
+
+  solvedBtn: {
+    background: "linear-gradient(90deg,#00c853,#00e676)",
+    color: "#fff",
+  },
+
+  rejectBtn: {
+    background: "linear-gradient(90deg,#ff1744,#ff5252)",
+    color: "#fff",
+  },
+
+  statCard: {
+    background: "rgba(255,255,255,0.06)",
+    padding: "15px",
+    borderRadius: "14px",
+    marginBottom: "12px",
+    textAlign: "center",
+  },
+
+  statNumber: {
+    fontSize: "28px",
+    fontWeight: "bold",
+    color: "#6ee7ff",
+  },
+
+  statLabel: {
+    color: "#fff",
+    marginTop: "5px",
+  },
+
+  empty: {
+    textAlign: "center",
+    color: "#cfefff",
+    padding: "30px",
+  },
 };
 
 function Admin() {
-    const [complaints, setComplaints] = useState([]);
-    const [acknowledgements, setAcknowledgements] = useState({});
-    const [statusCounts, setStatusCounts] = useState({ accepted: 0, rejected: 0, pending: 0 });
+  const [complaints, setComplaints] = useState([]);
+  const [statusCounts, setStatusCounts] = useState({
+    solved: 0,
+    rejected: 0,
+    pending: 0,
+  });
 
-    useEffect(() => {
-        // Fetch complaints from the backend
-        const fetchComplaints = async () => {
-            try {
-                const response = await axios.get('http://localhost:8081/api/complaints/getAll');
-                setComplaints(response.data);
-                updateStatusCounts(response.data);
-            } catch (error) {
-                console.error('Error fetching complaints:', error);
-            }
-        };
+  // Fetch complaints
+  const fetchComplaints = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:8081/api/complaints/getAll"
+      );
 
-        fetchComplaints();
-    }, []);
+      setComplaints(response.data);
+      updateStatusCounts(response.data);
+    } catch (error) {
+      console.error("Error fetching complaints:", error);
+    }
+  };
 
-    const handleAccept = (id) => {
-        setAcknowledgements({
-            ...acknowledgements,
-            [id]: `Complaint with ID ${id} accepted`,
-        });
-        updateComplaintStatus(id, 'accepted');
-        console.log(`Complaint with ID ${id} accepted`);
+  useEffect(() => {
+    fetchComplaints();
+  }, []);
+
+  // Count status
+  const updateStatusCounts = (data) => {
+    const counts = {
+      solved: 0,
+      rejected: 0,
+      pending: 0,
     };
 
-    const handleReject = (id) => {
-        setAcknowledgements({
-            ...acknowledgements,
-            [id]: `Complaint with ID ${id} rejected`,
-        });
-        updateComplaintStatus(id, 'rejected');
-        console.log(`Complaint with ID ${id} rejected`);
-    };
+    data.forEach((item) => {
+      if (item.status === "Solved") counts.solved++;
+      else if (item.status === "Rejected") counts.rejected++;
+      else counts.pending++;
+    });
 
-    const updateComplaintStatus = (id, status) => {
-        setComplaints((prevComplaints) =>
-            prevComplaints.map((complaint) =>
-                complaint.id === id ? { ...complaint, status } : complaint
-            )
-        );
-        updateStatusCounts(complaints.map((complaint) =>
-            complaint.id === id ? { ...complaint, status } : complaint
-        ));
-    };
+    setStatusCounts(counts);
+  };
 
-    const updateStatusCounts = (complaints) => {
-        const counts = { accepted: 0, rejected: 0, pending: 0 };
-        complaints.forEach((complaint) => {
-            if (complaint.status === 'accepted') counts.accepted++;
-            else if (complaint.status === 'rejected') counts.rejected++;
-            else counts.pending++;
-        });
-        setStatusCounts(counts);
-    };
+  // Update status
+  const updateStatus = async (id, status) => {
+    try {
+      await axios.put(
+        `http://localhost:8081/api/complaints/updateStatus/${id}?status=${status}`
+      );
 
-    const data = {
-        labels: ['Accepted', 'Rejected', 'Pending'],
-        datasets: [
-            {
-                data: [statusCounts.accepted, statusCounts.rejected, statusCounts.pending],
-                backgroundColor: ['#28a745', '#dc3545', '#ffc107'],
-            },
+      fetchComplaints();
+    } catch (error) {
+      console.error("Error updating status:", error);
+    }
+  };
+
+  const chartData = {
+    labels: ["Solved", "Rejected", "Pending"],
+    datasets: [
+      {
+        data: [
+          statusCounts.solved,
+          statusCounts.rejected,
+          statusCounts.pending,
         ],
-    };
+        backgroundColor: ["#00e676", "#ff5252", "#ffd54f"],
+        borderWidth: 0,
+      },
+    ],
+  };
 
-    const options = {
-        plugins: {
-            legend: {
-                display: true,
-                position: 'top',
-            },
-            tooltip: {
-                callbacks: {
-                    label: function (context) {
-                        const label = context.label || '';
-                        const value = context.raw || 0;
-                        return `${label}: ${value}`;
-                    },
-                },
-            },
+  const chartOptions = {
+    plugins: {
+      legend: {
+        labels: {
+          color: "#ffffff",
         },
-        maintainAspectRatio: false,
-    };
+      },
+    },
+  };
 
-    return (
-        <div style={styles.mainContainer}>
-            <div style={styles.container}>
-                <h2>Complaint Dashboard</h2>
-                {complaints.map((complaint) => (
-                    <div key={complaint.id} style={styles.complaintItem}>
-                        <p style={styles.complaintType}>{complaint.complaintType}</p>
-                        <p>Name: {complaint.name}</p>
-                        <p>Address: {complaint.address}</p>
-                        <p>Zone: {complaint.zone}</p>
-                        <p>Phone Number: {complaint.phoneNumber}</p>
-                        <p>Email Address: {complaint.emailAddress}</p>
-                        <div style={styles.buttonContainer}>
-                            <button
-                                style={{ ...styles.button, ...styles.acceptButton }}
-                                onClick={() => handleAccept(complaint.id)}
-                            >
-                                Accept
-                            </button>
-                            <button
-                                style={{ ...styles.button, ...styles.rejectButton }}
-                                onClick={() => handleReject(complaint.id)}
-                            >
-                                Reject
-                            </button>
-                        </div>
-                        {acknowledgements[complaint.id] && (
-                            <p style={styles.acknowledgement}>
-                                {acknowledgements[complaint.id]}
-                            </p>
-                        )}
-                    </div>
-                ))}
-            </div>
-            <div style={styles.chartContainer}>
-                <h3>Complaints Status Overview</h3>
-                <Pie data={data} options={options} width={300} height={300} />
-            </div>
+  return (
+    <div style={styles.page}>
+      <h1 style={styles.title}>Admin Complaint Dashboard</h1>
+
+      <div style={styles.layout}>
+        {/* LEFT */}
+        <div style={styles.leftPanel}>
+          {complaints.length === 0 ? (
+            <div style={styles.empty}>No Complaints Found</div>
+          ) : (
+            complaints.map((item) => (
+              <div key={item.id} style={styles.card}>
+                <div style={styles.complaintType}>
+                  {item.complaintType}
+                </div>
+
+                <p style={styles.text}>Name: {item.name}</p>
+                <p style={styles.text}>Address: {item.address}</p>
+                <p style={styles.text}>Zone: {item.zone}</p>
+                <p style={styles.text}>Phone: {item.phoneNumber}</p>
+                <p style={styles.text}>Email: {item.emailAddress}</p>
+
+                <p style={styles.status}>
+                  Status:{" "}
+                  <span style={{ color: "#6ee7ff" }}>
+                    {item.status || "Pending"}
+                  </span>
+                </p>
+
+                <div style={styles.buttonRow}>
+                  <button
+                    style={{
+                      ...styles.btn,
+                      ...styles.solvedBtn,
+                    }}
+                    onClick={() =>
+                      updateStatus(item.id, "Solved")
+                    }
+                  >
+                    Mark Solved
+                  </button>
+
+                  <button
+                    style={{
+                      ...styles.btn,
+                      ...styles.rejectBtn,
+                    }}
+                    onClick={() =>
+                      updateStatus(item.id, "Rejected")
+                    }
+                  >
+                    Reject
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
         </div>
-    );
+
+        {/* RIGHT */}
+        <div style={styles.rightPanel}>
+          <div style={styles.statCard}>
+            <div style={styles.statNumber}>
+              {complaints.length}
+            </div>
+            <div style={styles.statLabel}>
+              Total Complaints
+            </div>
+          </div>
+
+          <div style={styles.statCard}>
+            <div style={styles.statNumber}>
+              {statusCounts.solved}
+            </div>
+            <div style={styles.statLabel}>Solved</div>
+          </div>
+
+          <div style={styles.statCard}>
+            <div style={styles.statNumber}>
+              {statusCounts.pending}
+            </div>
+            <div style={styles.statLabel}>Pending</div>
+          </div>
+
+          <div style={{ marginTop: "20px" }}>
+            <Pie data={chartData} options={chartOptions} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default Admin;

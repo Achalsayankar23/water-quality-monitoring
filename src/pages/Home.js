@@ -1,152 +1,325 @@
-import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import Slider from 'react-slick';
-import "slick-carousel/slick/slick-theme.css";
-import "slick-carousel/slick/slick.css";
+import axios from "axios";
+import React, { useEffect, useState } from "react";
+import { Pie } from "react-chartjs-2";
+import { ArcElement, Chart, Legend, Tooltip } from "chart.js";
+
+Chart.register(ArcElement, Tooltip, Legend);
 
 const styles = {
-  pageContent: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    minHeight: '88vh', // Ensure it covers the full viewport height
-    background: 'url(https://wallpapercave.com/wp/5Oi2ZbZ.jpg) center/cover no-repeat', // Background image with URL
-    backgroundColor: '#f0f4f8', // Fallback background color
+  page: {
+    minHeight: "100vh",
+    padding: "35px",
+    background:
+      "linear-gradient(135deg,#02131f,#05263a,#0b4f6c,#02131f)",
+    backgroundSize: "400% 400%",
+    color: "#fff",
+    fontFamily: "Arial, sans-serif",
   },
-  contentContainer: {
-    textAlign: 'center',
-    color: '#fff', // Dark text color for contrast
-    maxWidth: '600px',
-    padding: '40px', // Increased padding for better spacing
-    background: 'rgba(0, 0, 0, 0.9)', // White background with 90% opacity
-    borderRadius: '12px', // Slightly rounded corners for modern feel
-    //boxShadow: '0 10px 20px rgba(0, 0, 0, 0.2)', // Subtle shadow for depth
-    transform: 'translateY(20px)', // Initial state for animation
-    opacity: 0, // Initial state for animation
-    transition: 'all 0.6s ease-out', // Smooth transition for animation
+
+  title: {
+    textAlign: "center",
+    fontSize: "42px",
+    fontWeight: "bold",
+    color: "#7df9ff",
+    marginBottom: "10px",
+    textShadow: "0 0 18px rgba(0,255,255,0.9)",
   },
-  contentContainerVisible: {
-    transform: 'translateY(0)', // Final state for animation
-    opacity: 1, // Final state for animation
+
+  subtitle: {
+    textAlign: "center",
+    color: "#d9faff",
+    marginBottom: "30px",
+    fontSize: "16px",
   },
-  welcomeText: {
-    fontSize: '36px',
-    fontWeight: '700', // Bold weight for emphasis
-    marginBottom: '20px',
-    transition: 'color 0.3s ease', // Transition for hover effect
-    color: '#007bff', // Blue text color
+
+  grid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))",
+    gap: "20px",
+    marginBottom: "30px",
   },
-  infoText: {
-    fontSize: '18px',
-    lineHeight: '1.6',
-    marginBottom: '30px',
-    color: '#ffffff', // Slightly lighter text for contrast
+
+  statCard: {
+    background: "rgba(255,255,255,0.08)",
+    border: "1px solid rgba(255,255,255,0.15)",
+    borderRadius: "22px",
+    padding: "24px",
+    textAlign: "center",
+    backdropFilter: "blur(16px)",
+    boxShadow: "0 0 22px rgba(0,255,255,0.12)",
   },
-  buttonsContainer: {
-    display: 'flex',
-    justifyContent: 'center',
-    gap: '20px', // Space between buttons
+
+  number: {
+    fontSize: "36px",
+    fontWeight: "bold",
+    color: "#7df9ff",
+    textShadow: "0 0 10px rgba(0,255,255,0.6)",
   },
-  button: {
-    padding: '12px 24px', // Larger padding for touch-friendly buttons
-    fontSize: '16px',
-    cursor: 'pointer',
-    border: 'none',
-    backgroundColor: '#007bff', // Blue background color
-    color: '#fff',
-    borderRadius: '8px',
-    transition: 'background-color 0.3s ease, transform 0.3s ease', // Smooth hover effect
-    textDecoration: 'none',
+
+  label: {
+    marginTop: "10px",
+    fontSize: "15px",
+    color: "#ffffff",
   },
-  buttonHover: {
-    backgroundColor: '#0056b3',
-    transform: 'translateY(-2px)', // Lift button on hover
+
+  middleSection: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1.2fr",
+    gap: "25px",
+    marginBottom: "30px",
   },
-  sliderContainer: {
-    marginTop: '40px', // Space above the slider
+
+  chartBox: {
+    background: "rgba(255,255,255,0.08)",
+    borderRadius: "24px",
+    padding: "25px",
+    backdropFilter: "blur(18px)",
+    border: "1px solid rgba(255,255,255,0.15)",
+    boxShadow: "0 0 22px rgba(0,255,255,0.12)",
   },
-  slide: {
-    padding: '20px',
-    background: '#e3f2fd',
-    borderRadius: '8px',
-    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-    textAlign: 'center',
-    fontSize: '18px',
-    color: '#ffffff',
+
+  chartTitle: {
+    textAlign: "center",
+    fontSize: "22px",
+    marginBottom: "20px",
+    color: "#7df9ff",
+    fontWeight: "bold",
+  },
+
+  trackerBox: {
+    background: "rgba(255,255,255,0.08)",
+    borderRadius: "24px",
+    padding: "25px",
+    backdropFilter: "blur(18px)",
+    border: "1px solid rgba(255,255,255,0.15)",
+    boxShadow: "0 0 22px rgba(0,255,255,0.12)",
+  },
+
+  trackerTitle: {
+    fontSize: "22px",
+    marginBottom: "18px",
+    color: "#7df9ff",
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+
+  complaintRow: {
+    background: "rgba(255,255,255,0.06)",
+    padding: "14px",
+    borderRadius: "14px",
+    marginBottom: "12px",
+    borderLeft: "4px solid #7df9ff",
+  },
+
+  rowName: {
+    fontWeight: "bold",
+    marginBottom: "5px",
+  },
+
+  status: {
+    marginTop: "5px",
+    fontWeight: "bold",
+  },
+
+  footer: {
+    textAlign: "center",
+    marginTop: "20px",
+    color: "#d7fbff",
+    fontSize: "14px",
   },
 };
 
 function Home() {
-  const [showContent, setShowContent] = useState(false);
+  const [complaints, setComplaints] = useState([]);
+  const [stats, setStats] = useState({
+    solved: 0,
+    rejected: 0,
+    pending: 0,
+  });
 
   useEffect(() => {
-    setShowContent(true);
+    fetchData();
   }, []);
 
-  const tips = [
-    "Fix leaking taps and pipes.",
-    "Use water filters certified to remove specific contaminants.",
-    "Store water in clean, sealed containers away from chemicals.",
-    "Stay updated on local water quality reports and advisories.",
-    "Boil water before drinking or cooking to kill harmful pathogens.",
-  ];
+  const fetchData = async () => {
+    try {
+      const res = await axios.get(
+        "http://localhost:8081/api/complaints/getAll"
+      );
 
-  const settings = {
-    dots: true,
-    infinite: true,
-    speed: 500,
-    slidesToShow: 1,
-    slidesToScroll: 1,
-    autoplay: true,
-    autoplaySpeed: 3000,
+      setComplaints(res.data);
+
+      let solved = 0;
+      let rejected = 0;
+      let pending = 0;
+
+      res.data.forEach((item) => {
+        if (item.status === "Solved") solved++;
+        else if (item.status === "Rejected") rejected++;
+        else pending++;
+      });
+
+      setStats({ solved, rejected, pending });
+    } catch (error) {
+      console.log(error);
+    }
   };
 
+  const chartData = {
+    labels: ["Solved", "Rejected", "Pending"],
+    datasets: [
+      {
+        data: [stats.solved, stats.rejected, stats.pending],
+        backgroundColor: [
+          "#00ff99",
+          "#ff3d71",
+          "#ffd93d",
+        ],
+        borderColor: "#03111f",
+        borderWidth: 3,
+        hoverOffset: 18,
+      },
+    ],
+  };
+
+  const getStatusColor = (status) => {
+    if (status === "Solved") return "#00ff99";
+    if (status === "Rejected") return "#ff3d71";
+    return "#ffd93d";
+  };
 
   return (
-    <div style={styles.pageContent}>
-      <div
-        style={{
-          ...styles.contentContainer,
-          ...(showContent ? styles.contentContainerVisible : {}),
-        }}
-      >
-        <h1
-          style={styles.welcomeText}
-          onMouseEnter={(e) => (e.currentTarget.style.color = '#0056b3')}
-          onMouseLeave={(e) => (e.currentTarget.style.color = '#007bff')}
-        >
-          Water Quality Monitoring
-        </h1>
-        <p style={styles.infoText}>
-          We're here to help you make a difference. Whether it's reporting a leak or learning how to conserve water, our platform is designed to empower you to take action.
-        </p>
-        <div style={styles.buttonsContainer}>
-          <Link to="/complaint" style={{ textDecoration: 'none' }}>
-            <button
-              style={styles.button}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = styles.buttonHover.backgroundColor;
-                e.currentTarget.style.transform = styles.buttonHover.transform;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = styles.button.backgroundColor;
-                e.currentTarget.style.transform = 'translateY(0)';
-              }}
-            >
-              Raise a Complaint
-            </button>
-          </Link>
-        </div>
-        <div style={styles.sliderContainer}>
-          <Slider {...settings}>
-            {tips.map((tip, index) => (
-              <div key={index} style={{ ...styles.slide, color: '#fff' }}>
-                {tip}
-              </div>
-            ))}
-          </Slider>
+    <div style={styles.page}>
+      <h1 style={styles.title}>
+        Water Quality Gaming Dashboard
+      </h1>
 
+      <p style={styles.subtitle}>
+        Real-Time Complaint Monitoring & Resolution Center
+      </p>
+
+      {/* Stats */}
+      <div style={styles.grid}>
+        <div style={styles.statCard}>
+          <div style={styles.number}>
+            {complaints.length}
+          </div>
+          <div style={styles.label}>
+            Total Complaints
+          </div>
         </div>
+
+        <div style={styles.statCard}>
+          <div style={styles.number}>
+            {stats.solved}
+          </div>
+          <div style={styles.label}>
+            Solved Issues
+          </div>
+        </div>
+
+        <div style={styles.statCard}>
+          <div style={styles.number}>
+            {stats.pending}
+          </div>
+          <div style={styles.label}>
+            Pending Issues
+          </div>
+        </div>
+
+        <div style={styles.statCard}>
+          <div style={styles.number}>
+            {stats.rejected}
+          </div>
+          <div style={styles.label}>
+            Rejected Cases
+          </div>
+        </div>
+      </div>
+
+      {/* Middle Section */}
+      <div style={styles.middleSection}>
+        {/* Premium Pie Chart */}
+        <div style={styles.chartBox}>
+          <div style={styles.chartTitle}>
+            Resolution Analytics
+          </div>
+
+          <div
+            style={{
+              width: "280px",
+              height: "280px",
+              margin: "0 auto",
+              padding: "15px",
+              borderRadius: "50%",
+              background:
+                "radial-gradient(circle, rgba(0,255,255,0.15), rgba(0,0,0,0.1))",
+              boxShadow:
+                "0 0 20px rgba(0,255,255,0.5), 0 0 40px rgba(0,255,255,0.25)",
+            }}
+          >
+            <Pie
+              data={chartData}
+              options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: "35%",
+                plugins: {
+                  legend: {
+                    labels: {
+                      color: "#ffffff",
+                      font: {
+                        size: 14,
+                        weight: "bold",
+                      },
+                    },
+                  },
+                },
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Tracker */}
+        <div style={styles.trackerBox}>
+          <div style={styles.trackerTitle}>
+            Live Complaint Tracker
+          </div>
+
+          {complaints.length === 0 ? (
+            <p>No complaints found</p>
+          ) : (
+            complaints.map((item) => (
+              <div
+                key={item.id}
+                style={styles.complaintRow}
+              >
+                <div style={styles.rowName}>
+                  {item.name}
+                </div>
+
+                <div>
+                  {item.complaintType}
+                </div>
+
+                <div
+                  style={{
+                    ...styles.status,
+                    color: getStatusColor(
+                      item.status
+                    ),
+                  }}
+                >
+                  {item.status}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      <div style={styles.footer}>
+        Smart Water Quality Monitoring System
       </div>
     </div>
   );

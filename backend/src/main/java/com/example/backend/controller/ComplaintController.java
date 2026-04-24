@@ -9,7 +9,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/complaints")
-@CrossOrigin
+@CrossOrigin(origins = "*")
 public class ComplaintController {
 
     @Autowired
@@ -31,7 +31,18 @@ public class ComplaintController {
     }
 
     @PutMapping("/{id}")
-    public Complaint updateComplaint(@PathVariable Long id, @RequestBody Complaint complaint) {
+    public Complaint updateComplaint(@PathVariable Long id,
+                                     @RequestBody Complaint complaint) {
+        return complaintService.updateComplaint(id, complaint);
+    }
+
+    @PutMapping("/updateStatus/{id}")
+    public Complaint updateComplaintStatus(@PathVariable Long id,
+                                           @RequestParam String status) {
+
+        Complaint complaint = complaintService.getComplaintById(id);
+        complaint.setStatus(status);
+
         return complaintService.updateComplaint(id, complaint);
     }
 
