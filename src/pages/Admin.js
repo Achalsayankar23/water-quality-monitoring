@@ -153,8 +153,8 @@ function Admin() {
   };
 
   useEffect(() => {
-    fetchComplaints();
-  }, []);
+   fetchComplaints();
+}, [fetchComplaints]);
 
   // Count status
   const updateStatusCounts = (data) => {
