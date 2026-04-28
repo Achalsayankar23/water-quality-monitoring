@@ -191,7 +191,7 @@ function Home() {
   return (
     <div style={styles.page}>
       <h1 style={styles.title}>
-        Water Quality Gaming Dashboard
+        Water Quality Monitoring 
       </h1>
 
       <p style={styles.subtitle}>

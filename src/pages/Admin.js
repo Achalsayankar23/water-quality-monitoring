@@ -1,6 +1,6 @@
 import axios from "axios";
 import { ArcElement, Chart, Legend, Tooltip } from "chart.js";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Pie } from "react-chartjs-2";
 
 Chart.register(ArcElement, Tooltip, Legend);
@@ -12,7 +12,6 @@ const styles = {
     background:
       "linear-gradient(135deg, #03111f, #06283d, #0a4f6b, #03111f)",
     backgroundSize: "400% 400%",
-    animation: "gradientMove 12s ease infinite",
     color: "#fff",
   },
 
@@ -37,7 +36,6 @@ const styles = {
     borderRadius: "20px",
     padding: "25px",
     backdropFilter: "blur(18px)",
-    boxShadow: "0 0 25px rgba(0,255,255,0.12)",
   },
 
   rightPanel: {
@@ -46,7 +44,6 @@ const styles = {
     borderRadius: "20px",
     padding: "25px",
     backdropFilter: "blur(18px)",
-    boxShadow: "0 0 25px rgba(0,255,255,0.12)",
     height: "fit-content",
   },
 
@@ -56,7 +53,6 @@ const styles = {
     borderRadius: "18px",
     padding: "20px",
     marginBottom: "18px",
-    transition: "0.3s",
   },
 
   complaintType: {
@@ -74,7 +70,6 @@ const styles = {
   status: {
     marginTop: "12px",
     fontWeight: "bold",
-    fontSize: "16px",
   },
 
   buttonRow: {
@@ -90,8 +85,6 @@ const styles = {
     borderRadius: "10px",
     fontWeight: "bold",
     cursor: "pointer",
-    fontSize: "15px",
-    transition: "0.3s",
   },
 
   solvedBtn: {
@@ -119,13 +112,11 @@ const styles = {
   },
 
   statLabel: {
-    color: "#fff",
     marginTop: "5px",
   },
 
   empty: {
     textAlign: "center",
-    color: "#cfefff",
     padding: "30px",
   },
 };
@@ -138,26 +129,7 @@ function Admin() {
     pending: 0,
   });
 
-  // Fetch complaints
-  const fetchComplaints = async () => {
-    try {
-      const response = await axios.get(
-        "http://localhost:8081/api/complaints/getAll"
-      );
-
-      setComplaints(response.data);
-      updateStatusCounts(response.data);
-    } catch (error) {
-      console.error("Error fetching complaints:", error);
-    }
-  };
-
-  useEffect(() => {
-   fetchComplaints();
-}, [fetchComplaints]);
-
-  // Count status
-  const updateStatusCounts = (data) => {
+  const updateStatusCounts = useCallback((data) => {
     const counts = {
       solved: 0,
       rejected: 0,
@@ -171,9 +143,25 @@ function Admin() {
     });
 
     setStatusCounts(counts);
-  };
+  }, []);
 
-  // Update status
+  const fetchComplaints = useCallback(async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:8081/api/complaints/getAll"
+      );
+
+      setComplaints(response.data);
+      updateStatusCounts(response.data);
+    } catch (error) {
+      console.error("Error fetching complaints:", error);
+    }
+  }, [updateStatusCounts]);
+
+  useEffect(() => {
+    fetchComplaints();
+  }, [fetchComplaints]);
+
   const updateStatus = async (id, status) => {
     try {
       await axios.put(
@@ -216,7 +204,6 @@ function Admin() {
       <h1 style={styles.title}>Admin Complaint Dashboard</h1>
 
       <div style={styles.layout}>
-        {/* LEFT */}
         <div style={styles.leftPanel}>
           {complaints.length === 0 ? (
             <div style={styles.empty}>No Complaints Found</div>
@@ -234,33 +221,20 @@ function Admin() {
                 <p style={styles.text}>Email: {item.emailAddress}</p>
 
                 <p style={styles.status}>
-                  Status:{" "}
-                  <span style={{ color: "#6ee7ff" }}>
-                    {item.status || "Pending"}
-                  </span>
+                  Status: {item.status || "Pending"}
                 </p>
 
                 <div style={styles.buttonRow}>
                   <button
-                    style={{
-                      ...styles.btn,
-                      ...styles.solvedBtn,
-                    }}
-                    onClick={() =>
-                      updateStatus(item.id, "Solved")
-                    }
+                    style={{ ...styles.btn, ...styles.solvedBtn }}
+                    onClick={() => updateStatus(item.id, "Solved")}
                   >
                     Mark Solved
                   </button>
 
                   <button
-                    style={{
-                      ...styles.btn,
-                      ...styles.rejectBtn,
-                    }}
-                    onClick={() =>
-                      updateStatus(item.id, "Rejected")
-                    }
+                    style={{ ...styles.btn, ...styles.rejectBtn }}
+                    onClick={() => updateStatus(item.id, "Rejected")}
                   >
                     Reject
                   </button>
@@ -270,7 +244,6 @@ function Admin() {
           )}
         </div>
 
-        {/* RIGHT */}
         <div style={styles.rightPanel}>
           <div style={styles.statCard}>
             <div style={styles.statNumber}>
