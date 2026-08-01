@@ -100,6 +100,3 @@ We welcome contributions from the community. If you have suggestions or bug repo
 
 Thank you for supporting the Water Quality Monitoring platform and our mission to promote clean water and sustainable development!
 
-## License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
